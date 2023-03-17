@@ -1,4 +1,4 @@
-module github.com/sujit-baniya/gorm-adapter
+module github.com/oarkflow/gorm-adapter
 
 go 1.19
 
