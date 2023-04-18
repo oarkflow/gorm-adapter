@@ -83,6 +83,7 @@ type Config struct {
 	DBSpecified    bool
 	IsFiltered     bool
 	DB             *gorm.DB
+	Scopes         []func(*gorm.DB) *gorm.DB
 }
 
 // Adapter represents the Gorm adapter for policy storage.
@@ -96,6 +97,7 @@ type Adapter struct {
 	dbSpecified    bool
 	db             *gorm.DB
 	isFiltered     bool
+	scopes         []func(*gorm.DB) *gorm.DB
 }
 
 // finalizer is the destructor for Adapter.
@@ -410,8 +412,12 @@ func loadPolicyLine(line CasbinRule, model model.Model) error {
 
 // LoadPolicy loads policy from database.
 func (a *Adapter) LoadPolicy(model model.Model) error {
+	var db *gorm.DB
 	var lines []CasbinRule
-	if err := a.db.Order(a.primaryKey).Find(&lines).Error; err != nil {
+	if len(a.scopes) > 0 {
+		db = a.db.Scopes(a.scopes...)
+	}
+	if err := db.Order(a.primaryKey).Find(&lines).Error; err != nil {
 		return err
 	}
 	err := a.Preview(&lines, model)
